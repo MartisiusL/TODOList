@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
@@ -8,25 +7,21 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using TODOList.Entities;
 using TODOList.Helpers;
+using TODOList.Models;
 
 namespace TODOList.Services
     {
     public interface IUserService
         {
         User Authenticate (string username, string password);
-        IEnumerable<User> GetAll ();
-        User GetById (int id);
+
+        User GetCachedUser();
         }
 
     public class UserService : IUserService
         {
-        private List<User> _users = new List<User>
-            {
-            new User { Id = 1, FirstName = "Admin", LastName = "User", Username = "admin", Password = "admin", Role = Role.Admin },
-            new User { Id = 2, FirstName = "Normal", LastName = "User", Username = "user", Password = "user", Role = Role.User }
-            };
-
         private readonly AppSettings _appSettings;
+        private User _cachedUser;
 
         public UserService (IOptions<AppSettings> appSettings)
             {
@@ -35,11 +30,15 @@ namespace TODOList.Services
 
         public User Authenticate (string username, string password)
             {
-            var user = _users.SingleOrDefault (x => x.Username == username && x.Password == password);
+            using (var context = new TodosContext ())
+                {
+                var user = context.User.FirstOrDefault (user => user.Email == username && user.Password == password);
+                // return null if user not found
+                if (user == null)
+                    return null;
 
-            // return null if user not found
-            if (user == null)
-                return null;
+                _cachedUser = user;
+                }
 
             // authentication successful so generate jwt token
             var tokenHandler = new JwtSecurityTokenHandler ();
@@ -47,28 +46,22 @@ namespace TODOList.Services
             var tokenDescriptor = new SecurityTokenDescriptor
                 {
                 Subject = new ClaimsIdentity (new Claim[]
-                {
-                    new Claim(ClaimTypes.Name, user.Id.ToString()),
-                    new Claim(ClaimTypes.Role, user.Role)
-                }),
+                    {
+                    new Claim (ClaimTypes.Name, _cachedUser.Id.ToString ()),
+                    new Claim (ClaimTypes.Role, _cachedUser.Role)
+                    }),
                 Expires = DateTime.UtcNow.AddDays (7),
                 SigningCredentials = new SigningCredentials (new SymmetricSecurityKey (key), SecurityAlgorithms.HmacSha256Signature)
                 };
             var token = tokenHandler.CreateToken (tokenDescriptor);
-            user.Token = tokenHandler.WriteToken (token);
+            _cachedUser.Token = tokenHandler.WriteToken (token);
 
-            return user.WithoutPassword ();
+            return _cachedUser.WithoutPassword ();
             }
 
-        public IEnumerable<User> GetAll ()
+        public User GetCachedUser ()
             {
-            return _users.WithoutPasswords ();
-            }
-
-        public User GetById (int id)
-            {
-            var user = _users.FirstOrDefault (x => x.Id == id);
-            return user.WithoutPassword ();
+            return _cachedUser;
             }
         }
     }
