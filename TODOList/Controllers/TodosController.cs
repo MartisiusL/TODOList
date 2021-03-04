@@ -19,17 +19,17 @@ namespace TODOList.Controllers
             }
 
         [Authorize (Roles = Role.User)]
-        [HttpGet ("all")]
+        [HttpGet ("my")]
         public IActionResult GetMyTodos ()
             {
-            return Ok (_todosService.GetAll ());
+            return Ok (_todosService.GetMyTodos ());
             }
 
         [Authorize (Roles = Role.User)]
         [HttpDelete ("remove")]
         public IActionResult RemoveTodo ([FromBody] TodoModel todo)
             {
-            _todosService.RemoveTodo (todo.Id);
+            _todosService.RemoveMyTodo (todo.Id);
             return Ok ();
             }
 

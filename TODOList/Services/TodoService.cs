@@ -8,9 +8,12 @@ namespace TODOList.Services
     public interface ITodoService
         {
         public void AddTodo (string todoName);
-        public void RemoveTodo (int todoId);
-        public IEnumerable<TodoItem> GetAll ();
+        public void RemoveMyTodo (int todoId);
+        public IEnumerable<TodoItem> GetMyTodos ();
         public void UpdateTodo (TodoModel todo);
+
+        public IEnumerable<TodoItem> GetUserTodoList (int userId);
+        public void RemoveTodo (int todoId);
         }
     public class TodoService: ITodoService
         {
@@ -37,18 +40,18 @@ namespace TODOList.Services
                 }
             }
 
-        public void RemoveTodo (int todoId)
+        public void RemoveMyTodo (int todoId)
             {
             using (var context = new TodosContext ())
                 {
-                var todoToRemove = new TodoItem () {Id = todoId};
+                var todoToRemove = new TodoItem () {Id = todoId, User = new User () {Id = _userService.GetCachedUser ().Id}};
                 context.TodoItem.Attach (todoToRemove);
                 context.TodoItem.Remove (todoToRemove);
                 context.SaveChanges ();
                 }
             }
 
-        public IEnumerable<TodoItem> GetAll ()
+        public IEnumerable<TodoItem> GetMyTodos ()
             {
             using (var context = new TodosContext ())
                 {
@@ -74,6 +77,25 @@ namespace TODOList.Services
                         }
                     context.SaveChanges ();
                     }
+                }
+            }
+
+        public IEnumerable<TodoItem> GetUserTodoList (int userId)
+            {
+            using (var context = new TodosContext ())
+                {
+                return context.TodoItem.Where (u => u.User.Id == userId).ToList ();
+                }
+            }
+
+        public void RemoveTodo (int todoId)
+            {
+            using (var context = new TodosContext ())
+                {
+                var todoToRemove = new TodoItem () { Id = todoId };
+                context.TodoItem.Attach (todoToRemove);
+                context.TodoItem.Remove (todoToRemove);
+                context.SaveChanges ();
                 }
             }
         }
