@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\src\\TODOList\\TODOList\\TODOList\\TODOList.csproj": {}
+    "C:\\src\\TODOList\\TODOList\\TODOList.csproj": {}
   },
   "projects": {
-    "C:\\src\\TODOList\\TODOList\\TODOList\\TODOList.csproj": {
+    "C:\\src\\TODOList\\TODOList\\TODOList.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\src\\TODOList\\TODOList\\TODOList\\TODOList.csproj",
+        "projectUniqueName": "C:\\src\\TODOList\\TODOList\\TODOList.csproj",
         "projectName": "TODOList",
-        "projectPath": "C:\\src\\TODOList\\TODOList\\TODOList\\TODOList.csproj",
+        "projectPath": "C:\\src\\TODOList\\TODOList\\TODOList.csproj",
         "packagesPath": "C:\\Users\\Lukas.Martisius\\.nuget\\packages\\",
-        "outputPath": "C:\\src\\TODOList\\TODOList\\TODOList\\obj\\",
+        "outputPath": "C:\\src\\TODOList\\TODOList\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
@@ -41,6 +41,16 @@
       },
       "frameworks": {
         "netcoreapp3.1": {
+          "dependencies": {
+            "Microsoft.AspNetCore.Authentication.JwtBearer": {
+              "target": "Package",
+              "version": "[3.1.12, )"
+            },
+            "System.IdentityModel.Tokens.Jwt": {
+              "target": "Package",
+              "version": "[6.8.0, )"
+            }
+          },
           "imports": [
             "net461",
             "net462",
