@@ -23,14 +23,19 @@ namespace TODOList.Controllers
         [HttpGet ("my")]
         public IActionResult GetMyTodos ()
             {
-            return Ok (_todosService.GetMyTodos ());
+            var myTodos = _todosService.GetMyTodos (out var errorMessage);
+            if (errorMessage != null)
+                return BadRequest (new { message = errorMessage });
+            return Ok (myTodos);
             }
 
         [Authorize (Roles = Role.User)]
         [HttpDelete ("remove")]
         public IActionResult RemoveTodo ([FromBody] TodoModel todo)
             {
-            _todosService.RemoveMyTodo (todo.Id);
+            _todosService.RemoveMyTodo (todo.Id, out var errorMessage);
+            if (errorMessage != null)
+                return BadRequest (new { message = errorMessage });
             return Ok ();
             }
 
@@ -38,15 +43,19 @@ namespace TODOList.Controllers
         [HttpPost ("add")]
         public IActionResult AddTodo ([FromBody] TodoModel todo)
             {
-            _todosService.AddTodo (todo.Name);
+            _todosService.AddTodo (todo.Name, out var errorMessage);
+            if (errorMessage != null)
+                return BadRequest (new { message = errorMessage });
             return Ok ();
             }
 
         [Authorize (Roles = Role.User)]
-        [HttpPost ("update")]
+        [HttpPut ("update")]
         public IActionResult UpdateTodo ([FromBody] TodoModel todo)
             {
-            _todosService.UpdateTodo (todo);
+            _todosService.UpdateTodo (todo, out var errorMessage);
+            if (errorMessage != null)
+                return BadRequest (new { message = errorMessage });
             return Ok ();
             }
         }

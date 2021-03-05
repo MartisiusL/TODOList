@@ -3,8 +3,12 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
 using System.Text;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using Newtonsoft.Json;
 using TODOList.Entities;
 using TODOList.Helpers;
 using TODOList.Models;
@@ -13,42 +17,70 @@ namespace TODOList.Services
     {
     public interface IUserService
         {
-        User Authenticate (string username, string password);
+        Task<User> Authenticate (string email, string password);
 
-        User GetCachedUser();
+        User GetCachedUser ();
         }
 
     public class UserService : IUserService
         {
         private readonly AppSettings _appSettings;
-        private User _cachedUser;
+        private readonly UserManager<User> _userManager;
+        private readonly IHttpContextAccessor m_contextAccessor;
 
-        public UserService (IOptions<AppSettings> appSettings)
+        private readonly string m_cookieHeader = "CachedUser";
+
+        public UserService (IOptions<AppSettings> appSettings, UserManager<User> userManager, IHttpContextAccessor contextAccessor)
             {
             _appSettings = appSettings.Value;
+            _userManager = userManager;
+            m_contextAccessor = contextAccessor;
             }
 
-        public User Authenticate (string username, string password)
+        public async Task<User> Authenticate (string email, string password)
             {
-            using (var context = new ApplicationDbContext ())
+            var user = await _userManager.FindByEmailAsync (email);
+            if (user == null)
+                return null;
+            var access = _userManager.PasswordHasher.VerifyHashedPassword (user, user.PasswordHash, password);
+            if (access == PasswordVerificationResult.Failed)
                 {
-                var user = context.User.FirstOrDefault (user => user.Email == username && user.Password == password);
-                // return null if user not found
-                if (user == null)
-                    return null;
-
-                _cachedUser = user;
+                return null;
                 }
 
             // authentication successful so generate jwt token
-            _cachedUser.Token = GenerateSecurityToken (_cachedUser);
+            user.Token = GenerateSecurityToken (user);
 
-            return _cachedUser.WithoutPassword ();
+            CacheUser (new CachedUserModel ()
+                {
+                Id = user.Id,
+                });
+
+            return user.WithoutPassword ();
+            }
+
+        private void CacheUser (CachedUserModel cachedUserModel)
+            {
+            var cookieOptions = new CookieOptions { Expires = DateTime.Now.AddMinutes (60) };
+            m_contextAccessor.HttpContext.Response.Cookies.Append (m_cookieHeader, JsonConvert.SerializeObject (cachedUserModel), cookieOptions);
             }
 
         public User GetCachedUser ()
             {
-            return _cachedUser;
+            var cookie = m_contextAccessor.HttpContext.Request.Cookies[m_cookieHeader];
+            if (cookie == null)
+                return null;
+            var cachedUserModel = JsonConvert.DeserializeObject<CachedUserModel> (cookie);
+            if (cachedUserModel == null)
+                return null;
+
+            using (var context = new ApplicationDbContext ())
+                {
+                var user = context.User.FirstOrDefault (u => u.Id == cachedUserModel.Id);
+                if (user is null)
+                    return null;
+                return user;
+                }
             }
 
         private string GenerateSecurityToken (User user)
@@ -62,7 +94,7 @@ namespace TODOList.Services
                     new Claim (ClaimTypes.Name, user.Id.ToString ()),
                     new Claim (ClaimTypes.Role, user.Role)
                     }),
-                Expires = DateTime.UtcNow.AddDays (7),
+                Expires = DateTime.UtcNow.AddHours (1),
                 SigningCredentials = new SigningCredentials (new SymmetricSecurityKey (key), SecurityAlgorithms.HmacSha256Signature)
                 };
             var token = tokenHandler.CreateToken (tokenDescriptor);

@@ -7,10 +7,10 @@ namespace TODOList.Services
     {
     public interface ITodoService
         {
-        public void AddTodo (string todoName);
-        public void RemoveMyTodo (int todoId);
-        public IEnumerable<TodoItem> GetMyTodos ();
-        public void UpdateTodo (TodoModel todo);
+        public void AddTodo (string todoName, out string errorMessage);
+        public void RemoveMyTodo (int todoId, out string errorMessage);
+        public IEnumerable<TodoItem> GetMyTodos (out string errorMessage);
+        public void UpdateTodo (TodoModel todo, out string errorMessage);
 
         public IEnumerable<TodoItem> GetUserTodoList (string userId);
         public void RemoveTodo (int todoId);
@@ -24,14 +24,21 @@ namespace TODOList.Services
         _userService = userService;
         }
 
-        public void AddTodo(string todoName)
+        public void AddTodo(string todoName, out string errorMessage)
             {
+            errorMessage = null;
             using (var context = new ApplicationDbContext ())
                 {
+                var user = _userService.GetCachedUser ();
+                if (user is null)
+                    {
+                    errorMessage = "User is not authorized";
+                    return;
+                    }
                 var newTodo = new TodoItem ()
                     {
                     Name = todoName,
-                    User = context.User.FirstOrDefault (user => user.Id == _userService.GetCachedUser ().Id),
+                    User = context.User.FirstOrDefault (u => u.Id == user.Id),
                     IsDone = false
                     };
                 context.TodoItem.Add (newTodo);
@@ -40,31 +47,52 @@ namespace TODOList.Services
                 }
             }
 
-        public void RemoveMyTodo (int todoId)
+        public void RemoveMyTodo (int todoId, out string errorMessage)
             {
+            errorMessage = null;
             using (var context = new ApplicationDbContext ())
                 {
-                var todoToRemove = new TodoItem () {Id = todoId, User = new User () {Id = _userService.GetCachedUser ().Id}};
+                var user = _userService.GetCachedUser ();
+                if (user is null)
+                    {
+                    errorMessage = "User is not authorized";
+                    return;
+                    }
+                var todoToRemove = new TodoItem () {Id = todoId, User = new User () {Id = user.Id}};
                 context.TodoItem.Attach (todoToRemove);
                 context.TodoItem.Remove (todoToRemove);
                 context.SaveChanges ();
                 }
             }
 
-        public IEnumerable<TodoItem> GetMyTodos ()
+        public IEnumerable<TodoItem> GetMyTodos (out string errorMessage)
             {
+            errorMessage = null;
             using (var context = new ApplicationDbContext ())
                 {
-                return context.TodoItem.Where (u => u.User.Id == _userService.GetCachedUser ().Id).ToList ();
+                var user = _userService.GetCachedUser ();
+                if (user is null)
+                    {
+                    errorMessage = "User is not authorized";
+                    return null;
+                    }
+                return context.TodoItem.Where (u => u.User.Id == user.Id).ToList ();
                 }
             }
 
-        public void UpdateTodo (TodoModel todoModel)
+        public void UpdateTodo (TodoModel todoModel, out string errorMessage)
             {
+            errorMessage = null;
             using (var context = new ApplicationDbContext ())
                 {
+                var user = _userService.GetCachedUser ();
+                if (user is null)
+                    {
+                    errorMessage = "User is not authorized";
+                    return;
+                    }
                 var todoToUpdate = context.TodoItem.FirstOrDefault
-                    (todo => todo.Id == todoModel.Id && todo.User.Id == _userService.GetCachedUser ().Id);
+                    (todo => todo.Id == todoModel.Id && todo.User.Id == user.Id);
                 if (todoToUpdate != null)
                     {
                     if (todoModel.Name != null)

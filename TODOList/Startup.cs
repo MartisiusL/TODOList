@@ -30,6 +30,7 @@ namespace TODOList
             {
             services.AddCors ();
             services.AddControllers ();
+            services.AddHttpContextAccessor ();
 
             // configure strongly typed settings objects
             var appSettingsSection = Configuration.GetSection ("AppSettings");
@@ -64,6 +65,7 @@ namespace TODOList
                     opt.Password.RequiredLength = 12;
                     opt.Password.RequireDigit = false;
                     opt.Password.RequireUppercase = false;
+                    opt.Password.RequireNonAlphanumeric = false;
                     opt.User.RequireUniqueEmail = true;
                     })
                 .AddEntityFrameworkStores<ApplicationDbContext> ()
@@ -79,8 +81,8 @@ namespace TODOList
             services.AddScoped<IEmailSender, EmailSender> ();
 
             // configure DI for application services
-            services.AddSingleton<IUserService, UserService> ();
-            services.AddSingleton<ITodoService, TodoService> ();
+            services.AddScoped<IUserService, UserService> ();
+            services.AddScoped<ITodoService, TodoService> ();
             }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -106,75 +108,6 @@ namespace TODOList
             app.UseEndpoints (endpoints => {
                 endpoints.MapControllers ();
             });
-
-            MockDatabaseData ();
-            }
-
-        private void MockDatabaseData()
-            {
-            using (var context = new ApplicationDbContext ())
-                {
-                // Creates the database if not exists
-                context.Database.EnsureDeleted ();
-                context.Database.EnsureCreated ();
-                var userMe = new User ()
-                    {
-                    Email = "martisiuslukas97@gmail.com",
-                    NormalizedEmail = "martisiuslukas97@gmail.com",
-                    Password = "123456789abc",
-                    Role = Role.User
-                    };
-                context.User.Add (userMe);
-
-                var userAdmin = new User ()
-                    {
-                    Email = "admin@gmail.com",
-                    NormalizedEmail = "admin@gmail.com",
-                    Password = "987654321abc",
-                    Role = Role.Admin
-                    };
-                context.User.Add (userAdmin);
-
-                var userRandom = new User ()
-                    {
-                    Email = "randomuser@gmail.com",
-                    NormalizedEmail = "randomuser@gmail.com",
-                    Password = "987654321abc",
-                    Role = Role.User
-                    };
-                context.User.Add (userRandom);
-
-
-                var newTodo = new TodoItem ()
-                    {
-                    Name = "First Todo",
-                    User = userMe
-                    };
-                context.TodoItem.Add (newTodo);
-
-                newTodo = new TodoItem ()
-                    {
-                    Name = "Second Todo",
-                    User = userMe
-                    };
-                context.TodoItem.Add (newTodo);
-
-                newTodo = new TodoItem ()
-                    {
-                    Name = "First Random",
-                    User = userRandom
-                    };
-                context.TodoItem.Add (newTodo);
-
-                newTodo = new TodoItem ()
-                    {
-                    Name = "Second Random",
-                    User = userRandom
-                    };
-                context.TodoItem.Add (newTodo);
-
-                context.SaveChanges ();
-                }
             }
         }
     }

@@ -17,7 +17,7 @@ namespace TODOList.Helpers
             {
             if (user == null) return null;
 
-            user.Password = null;
+            user.PasswordHash = null;
             return user;
             }
         }

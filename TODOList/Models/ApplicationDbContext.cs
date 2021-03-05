@@ -39,7 +39,6 @@ namespace TODOList.Models
                 {
                 entity.HasKey (e => e.Id);
                 entity.Property (e => e.Email).IsRequired ();
-                entity.Property (e => e.Password).IsRequired ();
                 entity.Property (e => e.Role);
                 });
             }
