@@ -1,7 +1,10 @@
+using System;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -53,6 +56,28 @@ namespace TODOList
                     };
                 });
 
+            services.AddDbContext<ApplicationDbContext> (
+                options => options.UseMySQL ("server=localhost;database=todos;user=root;password=martisius"));
+
+            services.AddIdentity<User, IdentityRole> (opt =>
+                    {
+                    opt.Password.RequiredLength = 12;
+                    opt.Password.RequireDigit = false;
+                    opt.Password.RequireUppercase = false;
+                    opt.User.RequireUniqueEmail = true;
+                    })
+                .AddEntityFrameworkStores<ApplicationDbContext> ()
+                .AddDefaultTokenProviders ();
+
+            services.Configure<DataProtectionTokenProviderOptions> (opt =>
+                opt.TokenLifespan = TimeSpan.FromMinutes (10));
+
+            var emailConfig = Configuration
+                .GetSection ("EmailConfiguration")
+                .Get<EmailConfiguration> ();
+            services.AddSingleton (emailConfig);
+            services.AddScoped<IEmailSender, EmailSender> ();
+
             // configure DI for application services
             services.AddSingleton<IUserService, UserService> ();
             services.AddSingleton<ITodoService, TodoService> ();
@@ -87,22 +112,24 @@ namespace TODOList
 
         private void MockDatabaseData()
             {
-            using (var context = new TodosContext ())
+            using (var context = new ApplicationDbContext ())
                 {
                 // Creates the database if not exists
                 context.Database.EnsureDeleted ();
                 context.Database.EnsureCreated ();
                 var userMe = new User ()
                     {
-                        Email = "martisiuslukas97@gmail.com",
-                        Password = "123456789abc",
-                        Role = Role.User
+                    Email = "martisiuslukas97@gmail.com",
+                    NormalizedEmail = "martisiuslukas97@gmail.com",
+                    Password = "123456789abc",
+                    Role = Role.User
                     };
                 context.User.Add (userMe);
 
                 var userAdmin = new User ()
                     {
                     Email = "admin@gmail.com",
+                    NormalizedEmail = "admin@gmail.com",
                     Password = "987654321abc",
                     Role = Role.Admin
                     };
@@ -111,6 +138,7 @@ namespace TODOList
                 var userRandom = new User ()
                     {
                     Email = "randomuser@gmail.com",
+                    NormalizedEmail = "randomuser@gmail.com",
                     Password = "987654321abc",
                     Role = Role.User
                     };

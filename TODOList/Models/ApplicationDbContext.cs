@@ -3,10 +3,19 @@ using TODOList.Entities;
 
 namespace TODOList.Models
     {
-    public class TodosContext : DbContext
+    public class ApplicationDbContext : DbContext
         {
         public DbSet<User> User { get; set; }
         public DbSet<TodoItem> TodoItem { get; set; }
+
+        public ApplicationDbContext (DbContextOptions<ApplicationDbContext> options)
+            : base (options)
+            {
+            }
+
+        public ApplicationDbContext ()
+            {
+            }
 
         protected override void OnConfiguring (DbContextOptionsBuilder optionsBuilder)
             {

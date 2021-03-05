@@ -1,32 +1,33 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TODOList.Models;
 using TODOList.Services;
 
 namespace TODOList.Controllers
     {
-    [Authorize]
-        [ApiController]
-        [Route ("[controller]")]
-        public class UsersController : ControllerBase
+    [Authorize (AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [ApiController]
+    [Route ("[controller]")]
+    public class UsersController : ControllerBase
+        {
+        private IUserService _userService;
+
+        public UsersController (IUserService userService)
             {
-            private IUserService _userService;
-
-            public UsersController (IUserService userService)
-                {
-                _userService = userService;
-                }
-
-            [AllowAnonymous]
-            [HttpPost ("authenticate")]
-            public IActionResult Authenticate ([FromBody] AuthenticateModel model)
-                {
-                var user = _userService.Authenticate (model.Username, model.Password);
-
-                if (user == null)
-                    return BadRequest (new { message = "Email or password is incorrect" });
-
-                return Ok (user);
-                }
+            _userService = userService;
             }
+
+        [AllowAnonymous]
+        [HttpPost ("authenticate")]
+        public IActionResult Authenticate ([FromBody] AuthenticateModel model)
+            {
+            var user = _userService.Authenticate (model.Username, model.Password);
+
+            if (user == null)
+                return BadRequest (new { message = "Email or password is incorrect" });
+
+            return Ok (user);
+            }
+        }
     }

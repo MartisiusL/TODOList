@@ -12,7 +12,7 @@ namespace TODOList.Services
         public IEnumerable<TodoItem> GetMyTodos ();
         public void UpdateTodo (TodoModel todo);
 
-        public IEnumerable<TodoItem> GetUserTodoList (int userId);
+        public IEnumerable<TodoItem> GetUserTodoList (string userId);
         public void RemoveTodo (int todoId);
         }
     public class TodoService: ITodoService
@@ -26,7 +26,7 @@ namespace TODOList.Services
 
         public void AddTodo(string todoName)
             {
-            using (var context = new TodosContext ())
+            using (var context = new ApplicationDbContext ())
                 {
                 var newTodo = new TodoItem ()
                     {
@@ -42,7 +42,7 @@ namespace TODOList.Services
 
         public void RemoveMyTodo (int todoId)
             {
-            using (var context = new TodosContext ())
+            using (var context = new ApplicationDbContext ())
                 {
                 var todoToRemove = new TodoItem () {Id = todoId, User = new User () {Id = _userService.GetCachedUser ().Id}};
                 context.TodoItem.Attach (todoToRemove);
@@ -53,7 +53,7 @@ namespace TODOList.Services
 
         public IEnumerable<TodoItem> GetMyTodos ()
             {
-            using (var context = new TodosContext ())
+            using (var context = new ApplicationDbContext ())
                 {
                 return context.TodoItem.Where (u => u.User.Id == _userService.GetCachedUser ().Id).ToList ();
                 }
@@ -61,7 +61,7 @@ namespace TODOList.Services
 
         public void UpdateTodo (TodoModel todoModel)
             {
-            using (var context = new TodosContext ())
+            using (var context = new ApplicationDbContext ())
                 {
                 var todoToUpdate = context.TodoItem.FirstOrDefault
                     (todo => todo.Id == todoModel.Id && todo.User.Id == _userService.GetCachedUser ().Id);
@@ -80,9 +80,9 @@ namespace TODOList.Services
                 }
             }
 
-        public IEnumerable<TodoItem> GetUserTodoList (int userId)
+        public IEnumerable<TodoItem> GetUserTodoList (string userId)
             {
-            using (var context = new TodosContext ())
+            using (var context = new ApplicationDbContext ())
                 {
                 return context.TodoItem.Where (u => u.User.Id == userId).ToList ();
                 }
@@ -90,7 +90,7 @@ namespace TODOList.Services
 
         public void RemoveTodo (int todoId)
             {
-            using (var context = new TodosContext ())
+            using (var context = new ApplicationDbContext ())
                 {
                 var todoToRemove = new TodoItem () { Id = todoId };
                 context.TodoItem.Attach (todoToRemove);

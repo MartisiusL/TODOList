@@ -30,7 +30,7 @@ namespace TODOList.Services
 
         public User Authenticate (string username, string password)
             {
-            using (var context = new TodosContext ())
+            using (var context = new ApplicationDbContext ())
                 {
                 var user = context.User.FirstOrDefault (user => user.Email == username && user.Password == password);
                 // return null if user not found
@@ -41,20 +41,7 @@ namespace TODOList.Services
                 }
 
             // authentication successful so generate jwt token
-            var tokenHandler = new JwtSecurityTokenHandler ();
-            var key = Encoding.ASCII.GetBytes (_appSettings.Secret);
-            var tokenDescriptor = new SecurityTokenDescriptor
-                {
-                Subject = new ClaimsIdentity (new Claim[]
-                    {
-                    new Claim (ClaimTypes.Name, _cachedUser.Id.ToString ()),
-                    new Claim (ClaimTypes.Role, _cachedUser.Role)
-                    }),
-                Expires = DateTime.UtcNow.AddDays (7),
-                SigningCredentials = new SigningCredentials (new SymmetricSecurityKey (key), SecurityAlgorithms.HmacSha256Signature)
-                };
-            var token = tokenHandler.CreateToken (tokenDescriptor);
-            _cachedUser.Token = tokenHandler.WriteToken (token);
+            _cachedUser.Token = GenerateSecurityToken (_cachedUser);
 
             return _cachedUser.WithoutPassword ();
             }
@@ -62,6 +49,24 @@ namespace TODOList.Services
         public User GetCachedUser ()
             {
             return _cachedUser;
+            }
+
+        private string GenerateSecurityToken (User user)
+            {
+            var tokenHandler = new JwtSecurityTokenHandler ();
+            var key = Encoding.ASCII.GetBytes (_appSettings.Secret);
+            var tokenDescriptor = new SecurityTokenDescriptor
+                {
+                Subject = new ClaimsIdentity (new Claim[]
+                    {
+                    new Claim (ClaimTypes.Name, user.Id.ToString ()),
+                    new Claim (ClaimTypes.Role, user.Role)
+                    }),
+                Expires = DateTime.UtcNow.AddDays (7),
+                SigningCredentials = new SigningCredentials (new SymmetricSecurityKey (key), SecurityAlgorithms.HmacSha256Signature)
+                };
+            var token = tokenHandler.CreateToken (tokenDescriptor);
+            return tokenHandler.WriteToken (token);
             }
         }
     }
