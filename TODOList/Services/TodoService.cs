@@ -56,8 +56,13 @@ namespace TODOList.Services
                 errorMessage = "User is not authorized";
                 return;
                 }
-            var todoToRemove = new TodoItem () {Id = todoId, User = new User () {Id = user.Id}};
-            //_context.TodoItem.Attach (todoToRemove);
+            var todoToRemove = _context.TodoItem.FirstOrDefault(todo => todo.Id == todoId && todo.User.Id == user.Id);
+            if (todoToRemove is null)
+                {
+                errorMessage = "Todo not found";
+                return;
+                }
+            _context.TodoItem.Attach (todoToRemove);
             _context.TodoItem.Remove (todoToRemove);
             TrySaveContext (_context);
             }
@@ -128,7 +133,7 @@ namespace TODOList.Services
                 }
             catch (Exception ex)
                 {
-
+                Console.WriteLine(ex);
                 }
             }
         }

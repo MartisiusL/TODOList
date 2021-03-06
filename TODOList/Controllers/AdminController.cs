@@ -18,12 +18,26 @@ namespace TODOList.Controllers
             _todosService = todosService;
             }
 
+        /// <summary>
+        /// Gets todos list for selected user.
+        /// </summary>
+        /// <param name="userId">User id.</param>
+        /// <returns>Todos list.</returns>
+        /// <response code="200">Todos successfully found.</response>
+        /// <response code="401">User is not authorized.</response>
         [HttpGet ("todos/user")]
         public IActionResult GetUserTodoList ([FromQuery] string userId)
             {
             return Ok (_todosService.GetUserTodoList (userId));
             }
 
+        /// <summary>
+        /// Removed selected todoItem.
+        /// </summary>
+        /// <param name="todoId">TodoItem id.</param>
+        /// <returns>Ok response.</returns>
+        /// <response code="200">TodoItem successfully deleted.</response>
+        /// <response code="401">User is not authorized.</response>
         [HttpDelete ("todos/remove")]
         public IActionResult RemoveUserTodo ([FromQuery] int todoId)
             {

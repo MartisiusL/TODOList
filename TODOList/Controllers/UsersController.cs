@@ -26,6 +26,13 @@ namespace TODOList.Controllers
             _context = context;
             }
 
+        /// <summary>
+        /// User authentication endpoint.
+        /// </summary>
+        /// <param name="model">Model for user authentication with username and password.</param>
+        /// <returns>Signed in user.</returns>
+        /// <response code="200">User successfully signed in.</response>
+        /// <response code="401">Username or password was incorrect so user is not authorized.</response>
         [AllowAnonymous]
         [HttpPost ("authenticate")]
         public IActionResult Authenticate ([FromBody] AuthenticateModel model)
@@ -38,6 +45,11 @@ namespace TODOList.Controllers
             return Ok (user);
             }
 
+        /// <summary>
+        /// Opening endpoint which cleans the database and generates users and todos to the database.
+        /// </summary>
+        /// <returns>Ok result.</returns>
+        /// <response code="200">Database entries successfully mocked.</response>
         [AllowAnonymous]
         [HttpGet ("generate")]
         public async Task<IActionResult> GenerateUsers ()

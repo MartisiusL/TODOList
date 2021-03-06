@@ -23,6 +23,12 @@ namespace TODOList.Controllers
             _emailSender = emailSender;
             }
 
+        /// <summary>
+        /// Password reset procedure forgot password endpoint.
+        /// </summary>
+        /// <param name="forgotPasswordModel">Model of forgot password with forgotten account email.</param>
+        /// <returns>Ok result and sends password recovery email.</returns>
+        /// <response code="200">Successfully sent an email or email not found.</response>
         [HttpPost ("forgot")]
         [AllowAnonymous]
         public async Task<IActionResult> ForgotPassword (ForgotPasswordModel forgotPasswordModel)
@@ -37,6 +43,15 @@ namespace TODOList.Controllers
             return Ok ();
             }
 
+        /// <summary>
+        /// Password reset procedure reset password endpoint.
+        /// </summary>
+        /// <param name="token">Token for password change procedure, which was sent to the email.</param>
+        /// <param name="email">Email of the user to update password.</param>
+        /// <param name="resetPasswordModel">Model of reset password, which has new password in it.</param>
+        /// <returns>Ok result and updates password.</returns>
+        /// <response code="200">Successfully changed password or email not found.</response>
+        /// <response code="400">Bad request with an error.</response>
         [HttpPost]
         [AllowAnonymous]
         public async Task<IActionResult> ResetPassword ([FromQuery] string token, [FromQuery] string email, [FromBody] ResetPasswordModel resetPasswordModel)

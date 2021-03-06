@@ -28,10 +28,10 @@ namespace TODOList.Services
         {
         private readonly JwtTokenConfiguration _jwtToken;
         private readonly UserManager<User> _userManager;
-        private readonly IHttpContextAccessor m_contextAccessor;
+        private readonly IHttpContextAccessor _contextAccessor;
         private readonly ApplicationDbContext _context;
 
-        private readonly string m_cookieHeader = "CachedUser";
+        private readonly string _cookieHeader = "CachedUser";
 
         public UserService 
         (
@@ -43,7 +43,7 @@ namespace TODOList.Services
             {
             _jwtToken = appSettings.Value;
             _userManager = userManager;
-            m_contextAccessor = contextAccessor;
+            _contextAccessor = contextAccessor;
             _context = context;
             }
 
@@ -72,12 +72,12 @@ namespace TODOList.Services
         private void CacheUser (CachedUserModel cachedUserModel)
             {
             var cookieOptions = new CookieOptions { Expires = DateTime.Now.AddMinutes (60) };
-            m_contextAccessor.HttpContext.Response.Cookies.Append (m_cookieHeader, JsonConvert.SerializeObject (cachedUserModel), cookieOptions);
+            _contextAccessor.HttpContext.Response.Cookies.Append (_cookieHeader, JsonConvert.SerializeObject (cachedUserModel), cookieOptions);
             }
 
         public User GetCachedUser ()
             {
-            var cookie = m_contextAccessor.HttpContext.Request.Cookies[m_cookieHeader];
+            var cookie = _contextAccessor.HttpContext.Request.Cookies[_cookieHeader];
             if (cookie == null)
                 return null;
             var cachedUserModel = JsonConvert.DeserializeObject<CachedUserModel> (cookie);
@@ -85,8 +85,6 @@ namespace TODOList.Services
                 return null;
 
             var user = _context.User.AsNoTracking ().FirstOrDefault (u => u.Id == cachedUserModel.Id);
-            if (user is null)
-                return null;
             return user;
             }
 

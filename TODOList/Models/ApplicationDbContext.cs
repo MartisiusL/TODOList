@@ -1,6 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
-using TODOList.Configuration;
 using TODOList.Entities;
 
 namespace TODOList.Models

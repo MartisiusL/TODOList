@@ -20,6 +20,13 @@ namespace TODOList.Controllers
             _todosService = todosService;
             }
 
+        /// <summary>
+        /// Gets todos list for authorized user.
+        /// </summary>
+        /// <returns>Todos list.</returns>
+        /// <response code="200">Todos successfully found.</response>
+        /// <response code="400">User not found.</response>
+        /// <response code="401">User is not authorized.</response>
         [HttpGet ("my")]
         public IActionResult GetMyTodos ()
             {
@@ -29,6 +36,14 @@ namespace TODOList.Controllers
             return Ok (myTodos);
             }
 
+        /// <summary>
+        /// Removes todoItem for authorized user.
+        /// </summary>
+        /// <param name="todoId">Id of the todoItem to delete.</param>
+        /// <returns>Ok result.</returns>
+        /// <response code="200">TodoItem successfully removed.</response>
+        /// <response code="400">TodoItem with given id not found.</response>
+        /// <response code="401">User is not authorized.</response>
         [HttpDelete ("remove")]
         public IActionResult RemoveTodo ([FromQuery] int todoId)
             {
@@ -38,6 +53,14 @@ namespace TODOList.Controllers
             return Ok ();
             }
 
+        /// <summary>
+        /// Creates a new todoItem for the authorized user.
+        /// </summary>
+        /// <param name="todoName">Name of new todoItem.</param>
+        /// <returns>Ok result.</returns>
+        /// <response code="200">TodoItem successfully added.</response>
+        /// <response code="400">Bad request with an error.</response>
+        /// <response code="401">User is not authorized.</response>
         [HttpPost ("add")]
         public IActionResult AddTodo ([FromQuery] string todoName)
             {
@@ -51,10 +74,18 @@ namespace TODOList.Controllers
             return Ok ();
             }
 
+        /// <summary>
+        /// Updates todoItem for authorized user.
+        /// </summary>
+        /// <param name="todoModel">Model of todoItem to update.</param>
+        /// <returns>Ok result.</returns>
+        /// <response code="200">TodoItem successfully updated.</response>
+        /// <response code="400">Bad request with an error.</response>
+        /// <response code="401">User is not authorized.</response>
         [HttpPut ("update")]
-        public IActionResult UpdateTodo ([FromBody] TodoModel todo)
+        public IActionResult UpdateTodo ([FromBody] TodoModel todoModel)
             {
-            _todosService.UpdateTodo (todo, out var errorMessage);
+            _todosService.UpdateTodo (todoModel, out var errorMessage);
             if (errorMessage != null)
                 return BadRequest (new { message = errorMessage });
             return Ok ();
