@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using System;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TODOList.Entities;
@@ -7,7 +8,7 @@ using TODOList.Services;
 
 namespace TODOList.Controllers
     {
-    [Authorize (AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [Authorize (AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = Role.User)]
     [ApiController]
     [Route ("[controller]")]
     public class TodosController : ControllerBase
@@ -19,7 +20,6 @@ namespace TODOList.Controllers
             _todosService = todosService;
             }
 
-        [Authorize (Roles = Role.User)]
         [HttpGet ("my")]
         public IActionResult GetMyTodos ()
             {
@@ -29,27 +29,28 @@ namespace TODOList.Controllers
             return Ok (myTodos);
             }
 
-        [Authorize (Roles = Role.User)]
         [HttpDelete ("remove")]
-        public IActionResult RemoveTodo ([FromBody] TodoModel todo)
+        public IActionResult RemoveTodo ([FromQuery] int todoId)
             {
-            _todosService.RemoveMyTodo (todo.Id, out var errorMessage);
+            _todosService.RemoveMyTodo (todoId, out var errorMessage);
             if (errorMessage != null)
                 return BadRequest (new { message = errorMessage });
             return Ok ();
             }
 
-        [Authorize (Roles = Role.User)]
         [HttpPost ("add")]
-        public IActionResult AddTodo ([FromBody] TodoModel todo)
+        public IActionResult AddTodo ([FromQuery] string todoName)
             {
-            _todosService.AddTodo (todo.Name, out var errorMessage);
+            if (String.IsNullOrEmpty (todoName))
+                {
+                return BadRequest (new { message = "Name cannot be null" });
+                }
+            _todosService.AddTodo (todoName, out var errorMessage);
             if (errorMessage != null)
                 return BadRequest (new { message = errorMessage });
             return Ok ();
             }
 
-        [Authorize (Roles = Role.User)]
         [HttpPut ("update")]
         public IActionResult UpdateTodo ([FromBody] TodoModel todo)
             {

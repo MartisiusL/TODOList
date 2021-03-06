@@ -6,9 +6,11 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
+using TODOList.Configuration;
 using TODOList.Entities;
 using TODOList.Helpers;
 using TODOList.Models;
@@ -24,17 +26,25 @@ namespace TODOList.Services
 
     public class UserService : IUserService
         {
-        private readonly AppSettings _appSettings;
+        private readonly JwtTokenConfiguration _jwtToken;
         private readonly UserManager<User> _userManager;
         private readonly IHttpContextAccessor m_contextAccessor;
+        private readonly ApplicationDbContext _context;
 
         private readonly string m_cookieHeader = "CachedUser";
 
-        public UserService (IOptions<AppSettings> appSettings, UserManager<User> userManager, IHttpContextAccessor contextAccessor)
+        public UserService 
+        (
+        IOptions<JwtTokenConfiguration> appSettings, 
+        UserManager<User> userManager, 
+        IHttpContextAccessor contextAccessor,
+        ApplicationDbContext context
+        )
             {
-            _appSettings = appSettings.Value;
+            _jwtToken = appSettings.Value;
             _userManager = userManager;
             m_contextAccessor = contextAccessor;
+            _context = context;
             }
 
         public async Task<User> Authenticate (string email, string password)
@@ -74,19 +84,16 @@ namespace TODOList.Services
             if (cachedUserModel == null)
                 return null;
 
-            using (var context = new ApplicationDbContext ())
-                {
-                var user = context.User.FirstOrDefault (u => u.Id == cachedUserModel.Id);
-                if (user is null)
-                    return null;
-                return user;
-                }
+            var user = _context.User.AsNoTracking ().FirstOrDefault (u => u.Id == cachedUserModel.Id);
+            if (user is null)
+                return null;
+            return user;
             }
 
         private string GenerateSecurityToken (User user)
             {
             var tokenHandler = new JwtSecurityTokenHandler ();
-            var key = Encoding.ASCII.GetBytes (_appSettings.Secret);
+            var key = Encoding.ASCII.GetBytes (_jwtToken.Secret);
             var tokenDescriptor = new SecurityTokenDescriptor
                 {
                 Subject = new ClaimsIdentity (new Claim[]

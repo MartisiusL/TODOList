@@ -17,11 +17,13 @@ namespace TODOList.Controllers
         {
         private IUserService _userService;
         private readonly UserManager<User> _userManager;
+        private readonly ApplicationDbContext _context;
 
-        public UsersController (IUserService userService, UserManager<User> userManager)
+        public UsersController (IUserService userService, UserManager<User> userManager, ApplicationDbContext context)
             {
             _userService = userService;
             _userManager = userManager;
+            _context = context;
             }
 
         [AllowAnonymous]
@@ -30,8 +32,8 @@ namespace TODOList.Controllers
             {
             var user = _userService.Authenticate (model.Username, model.Password);
 
-            if (user == null)
-                return BadRequest (new { message = "Email or password is incorrect" });
+            if (user.Result == null)
+                return Unauthorized (new { message = "Email or password is incorrect" });
 
             return Ok (user);
             }
@@ -46,14 +48,10 @@ namespace TODOList.Controllers
 
         private async Task MockDatabaseData ()
             {
-            await using (var context = new ApplicationDbContext ())
-                {
-                // Creates the database if not exists
-                await context.Database.EnsureDeletedAsync ();
-                await context.Database.EnsureCreatedAsync ();
-                await context.SaveChangesAsync ();
-                }
-            
+            // Creates the database if not exists
+            await _context.Database.EnsureDeletedAsync ();
+            await _context.Database.EnsureCreatedAsync ();
+
             var userMe = new User ()
                 {
                 UserName = "martisiuslukas97@gmail.com",
@@ -81,38 +79,34 @@ namespace TODOList.Controllers
                 };
             await _userManager.CreateAsync (userRandom, "123456789abc");
 
-            await using (var context = new ApplicationDbContext ())
+            var newTodo = new TodoItem ()
                 {
-                var newTodo = new TodoItem ()
-                    {
-                    Name = "First Todo",
-                    User = await context.User.FirstOrDefaultAsync (user => user.Id == userMe.Id)
-                    };
-                await context.TodoItem.AddAsync (newTodo);
+                Name = "First Todo",
+                User = await _context.User.FirstOrDefaultAsync (user => user.Id == userMe.Id)
+                };
+            await _context.TodoItem.AddAsync (newTodo);
 
-                newTodo = new TodoItem ()
-                    {
-                    Name = "Second Todo",
-                    User = await context.User.FirstOrDefaultAsync (user => user.Id == userMe.Id)
-                    };
-                await context.TodoItem.AddAsync (newTodo);
+            newTodo = new TodoItem ()
+                {
+                Name = "Second Todo",
+                User = await _context.User.FirstOrDefaultAsync (user => user.Id == userMe.Id)
+                };
+            await _context.TodoItem.AddAsync (newTodo);
 
-                newTodo = new TodoItem ()
-                    {
-                    Name = "First Random",
-                    User = await context.User.FirstOrDefaultAsync (user => user.Id == userRandom.Id)
-                    };
-                await context.TodoItem.AddAsync (newTodo);
+            newTodo = new TodoItem ()
+                {
+                Name = "First Random",
+                User = await _context.User.FirstOrDefaultAsync (user => user.Id == userRandom.Id)
+                };
+            await _context.TodoItem.AddAsync (newTodo);
 
-                newTodo = new TodoItem ()
-                    {
-                    Name = "Second Random",
-                    User = await context.User.FirstOrDefaultAsync (user => user.Id == userRandom.Id)
-                    };
-                await context.TodoItem.AddAsync (newTodo);
-                await context.SaveChangesAsync ();
-                }
-
+            newTodo = new TodoItem ()
+                {
+                Name = "Second Random",
+                User = await _context.User.FirstOrDefaultAsync (user => user.Id == userRandom.Id)
+                };
+            await _context.TodoItem.AddAsync (newTodo);
+            await _context.SaveChangesAsync ();
             }
         }
     }

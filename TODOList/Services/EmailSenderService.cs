@@ -1,17 +1,23 @@
 ﻿using System.Threading.Tasks;
 using MailKit.Net.Smtp;
+using Microsoft.Extensions.Options;
 using MimeKit;
-using TODOList.Helpers;
+using TODOList.Configuration;
 using TODOList.Models;
 
 namespace TODOList.Services
     {
-    public class EmailSender : IEmailSender
+    public interface IEmailSenderService
+        {
+        Task SendEmailAsync (Message message);
+        }
+
+    public class EmailSenderService : IEmailSenderService
         {
         private readonly EmailConfiguration _emailConfig;
-        public EmailSender (EmailConfiguration emailConfig)
+        public EmailSenderService (IOptions<EmailConfiguration> emailConfig)
             {
-            _emailConfig = emailConfig;
+            _emailConfig = emailConfig.Value;
             }
         public async Task SendEmailAsync (Message message)
             {

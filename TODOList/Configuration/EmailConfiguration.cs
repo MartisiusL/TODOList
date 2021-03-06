@@ -1,7 +1,8 @@
-﻿namespace TODOList.Helpers
+﻿namespace TODOList.Configuration
     {
     public class EmailConfiguration
         {
+        public const string SectionName = "Email";
         public string From { get; set; }
         public string SmtpServer { get; set; }
         public int Port { get; set; }

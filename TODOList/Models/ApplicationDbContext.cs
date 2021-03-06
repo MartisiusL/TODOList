@@ -1,4 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using TODOList.Configuration;
 using TODOList.Entities;
 
 namespace TODOList.Models
@@ -11,15 +13,6 @@ namespace TODOList.Models
         public ApplicationDbContext (DbContextOptions<ApplicationDbContext> options)
             : base (options)
             {
-            }
-
-        public ApplicationDbContext ()
-            {
-            }
-
-        protected override void OnConfiguring (DbContextOptionsBuilder optionsBuilder)
-            {
-            optionsBuilder.UseMySQL ("server=localhost;database=todos;user=root;password=martisius");
             }
 
         protected override void OnModelCreating (ModelBuilder modelBuilder)

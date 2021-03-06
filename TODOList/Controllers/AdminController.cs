@@ -6,7 +6,7 @@ using TODOList.Services;
 
 namespace TODOList.Controllers
     {
-    [Authorize (AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [Authorize (AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = Role.Admin)]
     [ApiController]
     [Route ("[controller]")]
     public class AdminController : ControllerBase
@@ -18,14 +18,12 @@ namespace TODOList.Controllers
             _todosService = todosService;
             }
 
-        [Authorize (Roles = Role.Admin)]
         [HttpGet ("todos/user")]
         public IActionResult GetUserTodoList ([FromQuery] string userId)
             {
             return Ok (_todosService.GetUserTodoList (userId));
             }
 
-        [Authorize (Roles = Role.Admin)]
         [HttpDelete ("todos/remove")]
         public IActionResult RemoveUserTodo ([FromQuery] int todoId)
             {

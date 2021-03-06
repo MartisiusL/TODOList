@@ -15,9 +15,9 @@ namespace TODOList.Controllers
     public class PasswordResetController : ControllerBase
         {
         private readonly UserManager<User> _userManager;
-        private readonly IEmailSender _emailSender;
+        private readonly IEmailSenderService _emailSender;
 
-        public PasswordResetController (UserManager<User> userManager, IEmailSender emailSender)
+        public PasswordResetController (UserManager<User> userManager, IEmailSenderService emailSender)
             {
             _userManager = userManager;
             _emailSender = emailSender;
@@ -44,8 +44,10 @@ namespace TODOList.Controllers
             var user = await _userManager.FindByEmailAsync (email);
             if (user == null)
                 return Ok ();
-            await _userManager.ResetPasswordAsync (user, token, resetPasswordModel.Password);
-            return Ok ();
+            var result = await _userManager.ResetPasswordAsync (user, token, resetPasswordModel.Password);
+            if (result.Succeeded)
+                return Ok ();
+            return BadRequest (result.Errors);
             }
         }
     }
